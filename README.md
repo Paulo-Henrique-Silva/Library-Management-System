@@ -1,3 +1,3 @@
 # Library-Management-System
 
-Sistema de Gerenciamento de uma Biblioteca
+Sistema de Gerenciamento de uma Biblioteca.
