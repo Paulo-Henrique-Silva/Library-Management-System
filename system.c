@@ -5,7 +5,23 @@
 #include <conio.h>
 #include <stdlib.h>
 
+#define DEFAULT_PWD "2021"
+#define ADMIN_FPATH "adm.bin"
+
 int menu();
+
+void addRent();
+void removeRent();
+void showRent();
+void addAccounts();
+void removeAccounts();
+void showAccounts();
+void addBooks();
+void removeBooks();
+void showBooks();
+void changePwd();
+
+int checkFiles();
 
 enum menuoperationtions 
 {
@@ -15,9 +31,12 @@ enum menuoperationtions
     ChangePassword, ExitProgram
 };
 
+FILE *pAdmin; 
+
 int main() 
 {
     int operation;
+    char infile[10];
 
     do
     {  
@@ -93,4 +112,36 @@ int menu()
     fgets(input, 1024, stdin); //takes as a str and convets to an integer to avoid errors
 
     return op = atoi(input);
+}
+
+/*
+Checks files situation. Returns:
+    -1 if the files were deleted
+    0 if the files are empty
+    1 if the files are ok
+*/
+int checkFiles()
+{
+    char infile[1024];
+
+    if((pAdmin = fopen(ADMIN_FPATH, "rb")) == NULL)
+    {
+        fclose(pAdmin);
+
+        pAdmin = fopen(ADMIN_FPATH, "wb");
+        fwrite(DEFAULT_PWD, sizeof(char), 1, pAdmin);
+        fclose(pAdmin);
+
+        return -1;
+    }
+    else if(fread(&infile, sizeof(char), 1, pAdmin) == EOF)
+    {
+        fclose(pAdmin);
+        return 0;
+    }
+    else
+    {
+        fclose(pAdmin);
+        return 1;
+    }
 }
