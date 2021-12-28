@@ -28,6 +28,7 @@ void changePwd(void);
 
 int checkFiles(void);
 int checkPwd(char strTo_cmp[]);
+char *removeSpecial_chars(char string[]);
 
 enum menuOperations
 {
@@ -49,7 +50,7 @@ typedef struct booksInfo
     title[40], 
     author[40],
     genres[15],
-    date[11];
+    date[12];
 
     float rentValue_perDay;
 } booksData;
@@ -163,6 +164,49 @@ void showAccounts(void)
 void addBooks(void)
 {
     booksData newBook_toAdd;
+    char inputStr[1024];
+
+    system("cls");
+    printf("\n\t\t\t\t\t  ADDING BOOKS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    printf("\n\nType the New Book's Title: ");
+    fgets(newBook_toAdd.title, sizeof(newBook_toAdd.title), stdin);
+    strcpy(newBook_toAdd.title, removeSpecial_chars(newBook_toAdd.title));
+    strupr(newBook_toAdd.title); //lower case to uppercase
+
+    printf("\nType the New Book's Author: ");
+    fgets(newBook_toAdd.author, sizeof(newBook_toAdd.author), stdin);
+    strcpy(newBook_toAdd.author, removeSpecial_chars(newBook_toAdd.author));
+    strupr(newBook_toAdd.author);
+    
+    printf("\nType the New Book's Genres: ");
+    fgets(newBook_toAdd.genres, sizeof(newBook_toAdd.genres), stdin);
+    strcpy(newBook_toAdd.genres, removeSpecial_chars(newBook_toAdd.genres));
+    strupr(newBook_toAdd.genres);
+
+    printf("\nType the New Book's Lauch Date(dd/mm/yyy): ");
+    fgets(newBook_toAdd.date, sizeof(newBook_toAdd.date), stdin);
+    strcpy(newBook_toAdd.date, removeSpecial_chars(newBook_toAdd.date));
+    strupr(newBook_toAdd.date);
+
+    printf("\nType the New Book's Rent Price per Day: R$");
+    fgets(inputStr, 1024, stdin);
+    if((newBook_toAdd.rentValue_perDay = atof(inputStr)) <= 0)
+    {
+        printf("\nInvalid Input!");
+        return;
+    }
+
+    //how it is adding, there is no need to block the program
+    checkFiles(); 
+
+    pBooks = fopen(BOOKS_FPATH, "a");
+    fprintf(pBooks, "%s %s %s %s %.2f\n", newBook_toAdd.title, newBook_toAdd.author, 
+    newBook_toAdd.genres, newBook_toAdd.date, newBook_toAdd.rentValue_perDay);
+    fclose(pBooks);
+
+    printf("\nNew Book Successfully Added!");
 }
 void removeBooks(void)
 {
@@ -183,10 +227,10 @@ void changePwd(void)
     newPwd2[1024], pwdIn_file[MAX_PWDSIZE];
 
     system("cls");
-    printf("\n\t\t\t\t    CHANGING PASSWORD");
-    printf("\n\t\t\t---------------------------------------");
+    printf("\n\t\t\t\t\tCHANGING PASSWORD");
+    printf("\n\t\t\t------------------------------------------------");
 
-    printf("\nType your Current Password: ");
+    printf("\n\nType your Current Password: ");
     fgets(currentPwd, 1024, stdin);
 
     if(checkPwd(currentPwd) == 0)
@@ -220,7 +264,7 @@ void changePwd(void)
     remove(ADMIN_FPATH);
     rename(TEMPF_PATH, ADMIN_FPATH);
 
-    printf("\nPassword Successfuly Changed!");
+    printf("\nPassword Successfully Changed!");
 }
 
 /*
@@ -302,4 +346,30 @@ int checkPwd(char strTo_cmp[])
     fclose(pAdmin);
 
     return 0; //if the passwords are not equal
+}
+/*
+This Function avoid extra chars being getting by others fgets, 
+removes the \n in last char and removes the blank spaces
+*/
+char *removeSpecial_chars(char string[])
+{
+    if(strchr(string, '\n') == NULL) //if the string is full or out of limits
+    {
+        char extraChar;
+        
+        //reads(removes) the extra chars
+        while((extraChar = fgetc(stdin)) != '\n' && extraChar != EOF);
+    }
+
+    //removes blank spaces
+    for(int i = 0; i < strlen(string) - 1; i++)
+    {
+        if(string[i] == ' ')
+            string[i] = '-';
+    }
+
+    //add the null char
+    string[strlen(string) - 1] = '\0';
+
+    return string;
 }
