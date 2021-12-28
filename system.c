@@ -27,7 +27,7 @@ void showBooks(void);
 void changePwd(void);
 
 int checkFile(FILE *pFile, char fPath[]);
-int checkPwd(char strTo_cmp[]);
+int login(void);
 char *removeSpecial_chars(char string[]);
 
 enum menuOperations
@@ -57,7 +57,7 @@ typedef struct booksInfo
 
 int main() 
 {
-    int operation;
+    int operation = 0;
 
     do
     {  
@@ -116,8 +116,7 @@ int main()
 //shows the menu and takes the user input
 int menu(void)
 {
-    char input[1024];
-    int op;
+    char input[1024] = {'\0'};
 
     system("cls"); //cleans screen
     printf("\t\t\t\tLIBRARY MANAGEMENT SYSTEM\n");
@@ -136,7 +135,7 @@ int menu(void)
     printf("\n\nType the Operation: ");
     fgets(input, 1024, stdin); //takes as a str and convets to an integer to avoid errors
 
-    return op = atoi(input);
+    return atoi(input);
 }
 
 void addRent(void)
@@ -171,7 +170,9 @@ void showAccounts(void)
 void addBooks(void)
 {
     book newBook_toAdd;
-    char inputStr[1024];
+    char inputStr[1024] = {'\0'};
+
+    if(login() == 0) return; //asks password to the user
 
     system("cls");
     printf("\n\t\t\t\t\t  ADDING BOOKS");
@@ -222,8 +223,10 @@ void removeBooks(void)
     const char TEMPF_PATH[] = "temp.tmp";
 
     book inFile;
-    char numInput[1024];
-    int lineCounter = 0, bookNum_toDelete;
+    char numInput[1024] = {'\0'};
+    int lineCounter = 0, bookNum_toDelete = 0;
+
+    if(login() == 0) return;
 
     system("cls");
     printf("\n\t\t\t\t\t  DELETE A BOOK");
@@ -299,6 +302,8 @@ void showBooks(void)
     book inFile;
     int lineCounter = 0;
 
+    if(login() == 0) return;
+
     system("cls");
     printf("\n\t\t\t\t\t     BOOKS");
     printf("\n\t\t\t------------------------------------------------");
@@ -333,24 +338,15 @@ void changePwd(void)
     FILE *pTemp;
     const char TEMPF_PATH[] = "temp.tmp";
 
-    char 
-    currentPwd[1024], newPwd1[1024], 
-    newPwd2[1024], pwdIn_file[MAX_PWDSIZE];
+    char newPwd1[1024], newPwd2[1024], pwdIn_file[MAX_PWDSIZE];
+
+    if(login() == 0) return;
 
     system("cls");
     printf("\n\t\t\t\t\tCHANGING PASSWORD");
     printf("\n\t\t\t------------------------------------------------");
 
-    printf("\n\nType your Current Password: ");
-    fgets(currentPwd, 1024, stdin);
-
-    if(checkPwd(currentPwd) == 0)
-    {
-        printf("\nInvalid PassWord!");
-        return;
-    }
-    
-    printf("\nType your New PassWord - MAX %d Characters: ", MAX_PWDSIZE - 1); 
+    printf("\n\nType your New PassWord - MAX %d Characters: ", MAX_PWDSIZE - 1); 
     fgets(newPwd1, 1024, stdin);
     printf("\nType your New PassWord again: ");
     fgets(newPwd2, 1024, stdin);
@@ -386,7 +382,6 @@ Checks files situation. Returns:
 */
 int checkFile(FILE *pFile, char fPath[])
 {
-    
     char buffer[1024] = {'\0'};
     char *firstLine; 
 
@@ -412,15 +407,24 @@ int checkFile(FILE *pFile, char fPath[])
 }
 
 /*
-Checks if the string is equal to the password admin in file
+To login, it needs the admin password
+Checks if the input is equal to the password admin in file
 - Returns 1 if it is equal
 - Else, returns 0
 */
-int checkPwd(char strTo_cmp[])
+int login(void)
 {
-    char pwdIn_file[MAX_PWDSIZE];
+    char 
+    inputPwd[1024] = {'\0'}, pwdIn_file[1024] = {'\0'};
 
-    if((pAdmin = fopen(ADMIN_FPATH, "r")) == NULL) //if the file does not exist, creates it
+    printf("\nType the Admin PassWord: ");
+    fgets(inputPwd, 1024, stdin);
+
+    if //if the file does not exist or are empty, it creates ii again
+    (
+        (pAdmin = fopen(ADMIN_FPATH, "r")) == NULL ||
+        fgets(pwdIn_file, 1024, pAdmin) == NULL
+    ) 
     {
         fclose(pAdmin);
 
@@ -431,16 +435,20 @@ int checkPwd(char strTo_cmp[])
         pAdmin = fopen(ADMIN_FPATH, "r"); 
     }
 
-    if(strcmp(fgets(pwdIn_file, MAX_PWDSIZE, pAdmin), strTo_cmp) == 0)
+    //compares the strings
+    fgets(pwdIn_file, 1024, pAdmin);
+
+    if(strcmp(pwdIn_file, inputPwd) != 0)
     {
+        printf("\nIncorret Password!");
         fclose(pAdmin);
-        return 1;
-    }
+        return 0;
+    } 
 
     fclose(pAdmin);
-
-    return 0; //if the passwords are not equal
+    return 1; //if the passwords are not equal
 }
+
 /*
 This Function avoid extra chars being getting by others fgets, 
 removes the \n in last char and removes the blank spaces
@@ -456,10 +464,10 @@ char *removeSpecial_chars(char string[])
     }
 
     //removes blank spaces
-    for(int lineCounter = 0; lineCounter < strlen(string) - 1; lineCounter++)
+    for(int i = 0; i < strlen(string) - 1; i++)
     {
-        if(string[lineCounter] == ' ')
-            string[lineCounter] = '-';
+        if(string[i] == ' ')
+            string[i] = '-';
     }
 
     //add the null char
