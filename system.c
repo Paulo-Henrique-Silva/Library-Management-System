@@ -26,7 +26,7 @@ void removeBooks(void);
 void showBooks(void);
 void changePwd(void);
 
-int checkFiles(void);
+int checkFile(FILE *pFile, char fPath[]);
 int checkPwd(char strTo_cmp[]);
 char *removeSpecial_chars(char string[]);
 
@@ -86,6 +86,7 @@ int main()
                 break;
 
             case RemoveBooks:
+                removeBooks();
                 break;
 
             case ShowBooks:
@@ -142,14 +143,17 @@ void addRent(void)
 {
 
 }
+
 void removeRent(void)
 {
 
 }
+
 void showRent(void)
 {
 
 }
+
 void addAccounts(void)
 {
 
@@ -158,10 +162,12 @@ void removeAccounts(void)
 {
 
 }
+
 void showAccounts(void)
 {
 
 }
+
 void addBooks(void)
 {
     book newBook_toAdd;
@@ -200,7 +206,7 @@ void addBooks(void)
     }
 
     //how it is adding, there is no need to block the program
-    checkFiles(); 
+    checkFile(pBooks, BOOKS_FPATH); 
 
     pBooks = fopen(BOOKS_FPATH, "a");
     fprintf(pBooks, "%s %s %s %s %.2f\n", newBook_toAdd.title, newBook_toAdd.author, 
@@ -209,40 +215,117 @@ void addBooks(void)
 
     printf("\nNew Book Successfully Added!");
 }
+
 void removeBooks(void)
 {
+    FILE *pTemp;
+    const char TEMPF_PATH[] = "temp.tmp";
 
+    book inFile;
+    char numInput[1024];
+    int lineCounter = 0, bookNum_toDelete;
+
+    system("cls");
+    printf("\n\t\t\t\t\t  DELETE A BOOK");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFile(pBooks, BOOKS_FPATH) != 1) //checks if there is, at least, a book
+    {
+        printf("\nIt seems it does not have a Book yet. :/");
+        return;
+    }
+
+    pBooks = fopen(BOOKS_FPATH, "r");
+
+    while
+    (
+        fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
+        &inFile.genres, &inFile.date, &inFile.rentValue_perDay) != EOF
+    )
+    {
+        lineCounter++; //shows the books num        
+        printf("\n\n\t\t\t%d) Title: %s - Author: %s", lineCounter, inFile.title, inFile.author);    
+    }    
+
+    fclose(pBooks);
+
+    printf("\n\nType the Book's Number to Delete: ");    
+    fgets(numInput, 1024, stdin);
+    if((bookNum_toDelete = atoi(numInput)) == 0 || bookNum_toDelete > lineCounter)
+    {        
+        printf("\nInvalid Input!");        
+        return;    
+    }
+
+    if(checkFile(pBooks, BOOKS_FPATH) != 1)
+    {
+        printf("\nError, it is not possible to continue.");
+        return;
+    }
+
+    //creates a temp file
+    pBooks = fopen(BOOKS_FPATH, "r");
+    pTemp = fopen(TEMPF_PATH, "w");
+    lineCounter = 0; //resets line counter
+
+    while
+    (
+        fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
+        &inFile.genres, &inFile.date, &inFile.rentValue_perDay) != EOF
+    )
+    {
+        lineCounter++; 
+        
+        //print in the temp file, except for the book that the user wants to delete
+        if(lineCounter != bookNum_toDelete)       
+        {   
+            fprintf(pTemp, "%s %s %s %s %.2f\n",  inFile.title, inFile.author, 
+            inFile.genres, inFile.date, inFile.rentValue_perDay);
+        }
+    }    
+
+    fclose(pBooks);
+    fclose(pTemp);
+
+    //deletes the old and renames the new one without that book
+    remove(BOOKS_FPATH);
+    rename(TEMPF_PATH, BOOKS_FPATH);
+
+    printf("\nBook Sucessfully Removed!");
 }
+
 void showBooks(void)
 {
     book inFile;
-    int i = 0;
+    int lineCounter = 0;
 
     system("cls");
     printf("\n\t\t\t\t\t     BOOKS");
     printf("\n\t\t\t------------------------------------------------");
 
-    if(checkFiles() != 1)
+    if(checkFile(pBooks, BOOKS_FPATH) != 1) //checks if the file is ok
     {
-        printf("\nIt seems It does not have a Book Yet :/");
+        printf("\n\nIt seems It does not have a Book Yet :/");
+        return;
     }
-    else
+
+    pBooks = fopen(BOOKS_FPATH, "r");
+
+    while //scans and prints the nums
+    (
+        fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
+        &inFile.genres, &inFile.date, &inFile.rentValue_perDay) != EOF
+    )
     {
-        pBooks = fopen(BOOKS_FPATH, "r");
-
-        while
-        (
-            fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
-            &inFile.genres, &inFile.date, &inFile.rentValue_perDay) != EOF
-        )
-        {
-            i++;
-            printf("\n\n%d) Title: %s - Author: %s - Genre: %s - Date: %s - Rent: R$%.2f", 
-            i, inFile.title, inFile.author, inFile.genres, inFile.date, inFile.rentValue_perDay);
-        }
-
-        fclose(pBooks);
+        lineCounter++;
+        printf("\n\n%d) Title: %s - Author: %s - Genre: %s - Date: %s - Rent: R$%.2f", 
+        lineCounter, inFile.title, inFile.author, inFile.genres, inFile.date, 
+        inFile.rentValue_perDay);
     }
+
+    fclose(pBooks);
+
+    printf("\n\nPress Anything to Continue.");
 }
 
 void changePwd(void)
@@ -301,52 +384,28 @@ Checks files situation. Returns:
     0 if the files are empty
     1 if the files are ok
 */
-int checkFiles(void)
+int checkFile(FILE *pFile, char fPath[])
 {
-    char buffer[4][1024];
+    
+    char buffer[1024] = {'\0'};
+    char *firstLine; 
 
-    pAdmin = fopen(ADMIN_FPATH, "r"); 
-    pRents = fopen(RENTS_FPATH, "r"); 
-    pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
-    pBooks = fopen(BOOKS_FPATH, "r");
+    pFile = fopen(fPath, "r");
+    firstLine = fgets(buffer, 1024, pFile); 
+    fclose(pFile);
 
-    //reads the first line of each file
-    fgets(buffer[0], 1024, pAdmin); 
-    fgets(buffer[1], 1024, pRents); 
-    fgets(buffer[2], 1024, pAccounts); 
-    fgets(buffer[3], 1024, pBooks); 
-
-    fclose(pAdmin);
-    fclose(pRents);
-    fclose(pAccounts);
-    fclose(pBooks);
-
-    //checks if they were deleted
-    if(pAdmin  == NULL || pRents == NULL || pAccounts  == NULL || pBooks == NULL)
+    if(pFile == NULL) //if it does not exist
     {
-        pAdmin = fopen(ADMIN_FPATH, "w");
-        pRents = fopen(RENTS_FPATH, "w");
-        pAccounts = fopen(ACCOUNTS_FPATH, "w");
-        pBooks = fopen(BOOKS_FPATH, "w"); 
-
-        fprintf(pAdmin, DEFAULT_PWD); //writes the default password
-
-        fclose(pAdmin);
-        fclose(pRents);
-        fclose(pAccounts);
-        fclose(pBooks);
+        pFile = fopen(fPath, "w"); 
+        fclose(pFile);
 
         return -1;
     }
-    else if  //if they are empty
-    (
-        buffer[0] == NULL || buffer[1] == NULL || 
-        buffer[2] == NULL || buffer[3] == NULL
-    )
+    else if(firstLine == NULL) //if it is empty
     {
-        return 0;
+        return 0; 
     }
-    else
+    else 
     {
         return 1;
     }
@@ -361,9 +420,16 @@ int checkPwd(char strTo_cmp[])
 {
     char pwdIn_file[MAX_PWDSIZE];
 
-    checkFiles(); 
+    if((pAdmin = fopen(ADMIN_FPATH, "r")) == NULL) //if the file does not exist, creates it
+    {
+        fclose(pAdmin);
 
-    pAdmin = fopen(ADMIN_FPATH, "r");
+        pAdmin = fopen(ADMIN_FPATH, "w");
+        fprintf(pAdmin, DEFAULT_PWD); //writes the default password
+        fclose(pAdmin);
+
+        pAdmin = fopen(ADMIN_FPATH, "r"); 
+    }
 
     if(strcmp(fgets(pwdIn_file, MAX_PWDSIZE, pAdmin), strTo_cmp) == 0)
     {
@@ -390,10 +456,10 @@ char *removeSpecial_chars(char string[])
     }
 
     //removes blank spaces
-    for(int i = 0; i < strlen(string) - 1; i++)
+    for(int lineCounter = 0; lineCounter < strlen(string) - 1; lineCounter++)
     {
-        if(string[i] == ' ')
-            string[i] = '-';
+        if(string[lineCounter] == ' ')
+            string[lineCounter] = '-';
     }
 
     //add the null char
