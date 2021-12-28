@@ -53,7 +53,7 @@ typedef struct booksInfo
     date[12];
 
     float rentValue_perDay;
-} booksData;
+} book;
 
 int main() 
 {
@@ -89,6 +89,7 @@ int main()
                 break;
 
             case ShowBooks:
+                showBooks();
                 break;
 
             case ChangePassword:
@@ -121,13 +122,13 @@ int menu(void)
     printf("\t\t\t\tLIBRARY MANAGEMENT SYSTEM\n");
     printf("\n\t\t\t\t[1] - Add a New Rent");
     printf("\n\t\t\t\t[2] - Remove an Existing Rent");
-    printf("\n\t\t\t\t[3] - Show Rents");
+    printf("\n\t\t\t\t[3] - Show Rents Details");
     printf("\n\t\t\t\t[4] - Add a New Account");
     printf("\n\t\t\t\t[5] - Remove an Existing Account");
-    printf("\n\t\t\t\t[6] - Show Accounts");
+    printf("\n\t\t\t\t[6] - Show Accounts Details");
     printf("\n\t\t\t\t[7] - Add a new Book");
     printf("\n\t\t\t\t[8] - Remove an Existing Book");
-    printf("\n\t\t\t\t[9] - Show Books");
+    printf("\n\t\t\t\t[9] - Show Books Details");
     printf("\n\t\t\t\t[10] - Change Admin PassWord");
     printf("\n\t\t\t\t[11] - Exit");
 
@@ -163,7 +164,7 @@ void showAccounts(void)
 }
 void addBooks(void)
 {
-    booksData newBook_toAdd;
+    book newBook_toAdd;
     char inputStr[1024];
 
     system("cls");
@@ -214,7 +215,34 @@ void removeBooks(void)
 }
 void showBooks(void)
 {
-    
+    book inFile;
+    int i = 0;
+
+    system("cls");
+    printf("\n\t\t\t\t\t     BOOKS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFiles() != 1)
+    {
+        printf("\nIt seems It does not have a Book Yet :/");
+    }
+    else
+    {
+        pBooks = fopen(BOOKS_FPATH, "r");
+
+        while
+        (
+            fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
+            &inFile.genres, &inFile.date, &inFile.rentValue_perDay) != EOF
+        )
+        {
+            i++;
+            printf("\n\n%d) Title: %s - Author: %s - Genre: %s - Date: %s - Rent: R$%.2f", 
+            i, inFile.title, inFile.author, inFile.genres, inFile.date, inFile.rentValue_perDay);
+        }
+
+        fclose(pBooks);
+    }
 }
 
 void changePwd(void)
