@@ -11,7 +11,7 @@
 #define RENTS_FPATH "rents.txt"
 #define ACCOUNTS_FPATH "account.txt"
 #define BOOKS_FPATH "books.txt"
-#define MAX_PWDSIZE 6
+#define MAX_PWDSIZE sizeof(DEFAULT_PWD)
 
 int menu();
 
@@ -29,7 +29,7 @@ void changePwd(void);
 int checkFiles(void);
 int checkPwd(char strTo_cmp[]);
 
-enum menuoperationtions 
+enum menuOperations
 {
     newRent = 1, RemoveRent, ShowRent,
     newAccounts, RemoveAccounts, ShowAccounts,
@@ -43,10 +43,20 @@ FILE
 *pAccounts,
 *pBooks; 
 
+typedef struct booksInfo
+{
+    char 
+    title[40], 
+    author[40],
+    genres[15],
+    date[11];
+
+    float rentValue_perDay;
+} booksData;
+
 int main() 
 {
     int operation;
-    char infile[10];
 
     do
     {  
@@ -71,6 +81,7 @@ int main()
                 break;
 
             case newBooks:
+                addBooks();
                 break;
 
             case RemoveBooks:
@@ -123,6 +134,43 @@ int menu(void)
     fgets(input, 1024, stdin); //takes as a str and convets to an integer to avoid errors
 
     return op = atoi(input);
+}
+
+void addRent(void)
+{
+
+}
+void removeRent(void)
+{
+
+}
+void showRent(void)
+{
+
+}
+void addAccounts(void)
+{
+
+}
+void removeAccounts(void)
+{
+
+}
+void showAccounts(void)
+{
+
+}
+void addBooks(void)
+{
+    booksData newBook_toAdd;
+}
+void removeBooks(void)
+{
+
+}
+void showBooks(void)
+{
+    
 }
 
 void changePwd(void)
@@ -183,28 +231,33 @@ Checks files situation. Returns:
 */
 int checkFiles(void)
 {
-    char buffer[1024];
+    char buffer[4][1024];
 
-    if 
-    (
-        //checks if they were deleted
-        (pAdmin = fopen(ADMIN_FPATH, "r")) == NULL ||
-        (pRents = fopen(RENTS_FPATH, "r")) == NULL ||
-        (pAccounts = fopen(ACCOUNTS_FPATH, "r")) == NULL ||
-        (pBooks = fopen(BOOKS_FPATH, "r")) == NULL 
-    )
+    pAdmin = fopen(ADMIN_FPATH, "r"); 
+    pRents = fopen(RENTS_FPATH, "r"); 
+    pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
+    pBooks = fopen(BOOKS_FPATH, "r");
+
+    //reads the first line of each file
+    fgets(buffer[0], 1024, pAdmin); 
+    fgets(buffer[1], 1024, pRents); 
+    fgets(buffer[2], 1024, pAccounts); 
+    fgets(buffer[3], 1024, pBooks); 
+
+    fclose(pAdmin);
+    fclose(pRents);
+    fclose(pAccounts);
+    fclose(pBooks);
+
+    //checks if they were deleted
+    if(pAdmin  == NULL || pRents == NULL || pAccounts  == NULL || pBooks == NULL)
     {
-        fclose(pAdmin);
-        fclose(pRents);
-        fclose(pAccounts);
-        fclose(pBooks);
-
         pAdmin = fopen(ADMIN_FPATH, "w");
-        fprintf(pAdmin, DEFAULT_PWD); //writes the default password
-
         pRents = fopen(RENTS_FPATH, "w");
         pAccounts = fopen(ACCOUNTS_FPATH, "w");
         pBooks = fopen(BOOKS_FPATH, "w"); 
+
+        fprintf(pAdmin, DEFAULT_PWD); //writes the default password
 
         fclose(pAdmin);
         fclose(pRents);
@@ -213,27 +266,16 @@ int checkFiles(void)
 
         return -1;
     }
-    else if
+    else if  //if they are empty
     (
-        //if they are empty
-        fgets(buffer, 1024, pAdmin) == NULL ||
-        fgets(buffer, 1024, pRents) == NULL ||
-        fgets(buffer, 1024, pAccounts) == NULL ||
-        fgets(buffer, 1024, pBooks) == NULL 
+        buffer[0] == NULL || buffer[1] == NULL || 
+        buffer[2] == NULL || buffer[3] == NULL
     )
     {
-        fclose(pAdmin);
-        fclose(pRents);
-        fclose(pAccounts);
-        fclose(pBooks);
         return 0;
     }
     else
     {
-        fclose(pAdmin);
-        fclose(pRents);
-        fclose(pAccounts);
-        fclose(pBooks);
         return 1;
     }
 }
@@ -247,7 +289,6 @@ int checkPwd(char strTo_cmp[])
 {
     char pwdIn_file[MAX_PWDSIZE];
 
-    //how it is justing cmping, there is no need to block the program
     checkFiles(); 
 
     pAdmin = fopen(ADMIN_FPATH, "r");
