@@ -94,6 +94,7 @@ int main()
                 break;
 
             case ShowRent:
+                showRent();
                 break;
 
             case newAccounts:
@@ -181,7 +182,7 @@ void addRent(void)
 
     //Choosing the Account
     system("cls");
-    printf("\n\t\t\t\t\t  CHOOSE AN ACCOUNT");
+    printf("\n\t\t\t\t\tCHOOSE AN ACCOUNT");
     printf("\n\t\t\t------------------------------------------------");
 
     if //checks the amount of Accounts and Books
@@ -218,7 +219,7 @@ void addRent(void)
 
     //Choosing the Book
     system("cls");
-    printf("\n\t\t\t\t\t  CHOOSE A BOOK");
+    printf("\n\t\t\t\t\tCHOOSE A BOOK");
     printf("\n\t\t\t------------------------------------------------");
 
     if(checkFile(pBooks, BOOKS_FPATH) != 1)
@@ -236,7 +237,7 @@ void addRent(void)
     )
     {
         lineCounter++; //shows books num        
-        printf("\n\n\t\t\t%d) Title: %s - Author: %s - Price: R$%.2f", 
+        printf("\n\n\t\t%d) Title: %s - Author: %s - Price: R$%.2f", 
         lineCounter, bookList.title, bookList.author, bookList.rentValue_perDay);    
     }    
     fclose(pBooks);
@@ -251,7 +252,7 @@ void addRent(void)
 
     //amount of days
     system("cls");
-    printf("\n\t\t\t\t\t  AMOUNT OF DAYS");
+    printf("\n\t\t\t\t\tAMOUNT OF DAYS");
     printf("\n\t\t\t------------------------------------------------");
 
     printf("\n\nType the Amount of Days to rent: ");
@@ -302,7 +303,7 @@ void addRent(void)
     )
     {
         lineCounter++;      
-
+        //the total to pay will be the amount of days times the price per day
         if(lineCounter == bookNum_toRent)
         {
             strcpy(newRent.title, bookList.title);
@@ -365,7 +366,36 @@ void removeRent(void)
 
 void showRent(void)
 {
+    rent inFile;
+    int lineCounter = 0;
 
+    if(login() == 0) return;
+
+    system("cls");
+    printf("\n\t\t\t\t\t       RENTS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFile(pRents, RENTS_FPATH) != 1)
+    {
+        printf("\nSorry, it seems it does not have a Rent yet :/");
+        return;
+    }
+
+    pRents = fopen(RENTS_FPATH, "r");
+    while //scans and prints the file rent info
+    (
+        fscanf(pRents, "%s %s %s %d %f", &inFile.name, &inFile.ic, &inFile.title, 
+        &inFile.amountOf_daysRented, &inFile.totalTo_pay) != EOF
+    )
+    {
+        lineCounter++;
+        printf("\n\n\t%d) Name: %s - IC: %s - Title: %s - Days: %d - Total: R$%.2f",
+        lineCounter, inFile.name, inFile.ic, inFile.title, inFile.amountOf_daysRented, 
+        inFile.totalTo_pay);
+    }
+    fclose(pRents);
+
+    printf("\n\nType Anything to continue.");
 }
 
 void addAccounts(void)
