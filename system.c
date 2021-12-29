@@ -338,7 +338,7 @@ void changePwd(void)
     FILE *pTemp;
     const char TEMPF_PATH[] = "temp.tmp";
 
-    char newPwd1[1024], newPwd2[1024], pwdIn_file[MAX_PWDSIZE];
+    char newPwd1[1024], newPwd2[1024];
 
     if(login() == 0) return;
 
@@ -375,10 +375,10 @@ void changePwd(void)
 }
 
 /*
-Checks files situation. Returns:
-    -1 if the files were deleted 
-    0 if the files are empty
-    1 if the files are ok
+Checks file situation. Returns:
+    -1 if the file was deleted 
+    0 if the file is empty
+    1 if the file is ok
 */
 int checkFile(FILE *pFile, char fPath[])
 {
@@ -420,7 +420,7 @@ int login(void)
     printf("\nType the Admin PassWord: ");
     fgets(inputPwd, 1024, stdin);
 
-    if //if the file does not exist or are empty, it creates ii again
+    if //if the file does not exist or are empty, it creates it again
     (
         (pAdmin = fopen(ADMIN_FPATH, "r")) == NULL ||
         fgets(pwdIn_file, 1024, pAdmin) == NULL
@@ -430,12 +430,12 @@ int login(void)
 
         pAdmin = fopen(ADMIN_FPATH, "w");
         fprintf(pAdmin, DEFAULT_PWD); //writes the default password
-        fclose(pAdmin);
-
-        pAdmin = fopen(ADMIN_FPATH, "r"); 
     }
 
+    fclose(pAdmin);
+
     //compares the strings
+    pAdmin = fopen(ADMIN_FPATH, "r");
     fgets(pwdIn_file, 1024, pAdmin);
 
     if(strcmp(pwdIn_file, inputPwd) != 0)
