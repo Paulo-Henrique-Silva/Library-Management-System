@@ -44,6 +44,17 @@ FILE
 *pAccounts,
 *pBooks; 
 
+typedef struct accountsInfo
+{
+    char
+    name[40],
+    ic[10];
+
+    int amountOf_rents;
+
+    float moneyTo_play;
+} account;
+
 typedef struct booksInfo
 {
     char 
@@ -73,6 +84,7 @@ int main()
                 break;
 
             case newAccounts:
+                addAccounts();
                 break;
 
             case RemoveAccounts:
@@ -155,7 +167,37 @@ void showRent(void)
 
 void addAccounts(void)
 {
+    account newAccount;
 
+    if(login() == 0) return;
+
+    system("cls");
+    printf("\n\t\t\t\t\t  ADDING ACCOUNTS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    printf("\n\nType the New Account Name: ");
+    fgets(newAccount.name, sizeof(newAccount.name), stdin);
+    strcpy(newAccount.name, removeSpecial_chars(newAccount.name));
+    strupr(newAccount.name);
+
+    printf("\nType the New Account Indentification code: ");
+    fgets(newAccount.ic, sizeof(newAccount.ic), stdin);
+    strcpy(newAccount.ic, removeSpecial_chars(newAccount.ic));
+    strupr(newAccount.ic);
+
+    //assign zero because it's a new account
+    newAccount.amountOf_rents = 0; 
+    newAccount.moneyTo_play = 0;
+
+    //how it is adding, there is no need to block the program
+    checkFile(pAccounts, ACCOUNTS_FPATH); 
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "a");
+    fprintf(pAccounts, "%s %s %d %.2f\n", newAccount.name, newAccount.ic, 
+    newAccount.amountOf_rents, newAccount.moneyTo_play);
+    fclose(pAccounts);
+
+    printf("\nNew Account Successfully Added");
 }
 void removeAccounts(void)
 {
@@ -178,27 +220,27 @@ void addBooks(void)
     printf("\n\t\t\t\t\t  ADDING BOOKS");
     printf("\n\t\t\t------------------------------------------------");
 
-    printf("\n\nType the New Book's Title: ");
+    printf("\n\nType the New Book Title: ");
     fgets(newBook_toAdd.title, sizeof(newBook_toAdd.title), stdin);
     strcpy(newBook_toAdd.title, removeSpecial_chars(newBook_toAdd.title));
     strupr(newBook_toAdd.title); //lower case to uppercase
 
-    printf("\nType the New Book's Author: ");
+    printf("\nType the New Book Author: ");
     fgets(newBook_toAdd.author, sizeof(newBook_toAdd.author), stdin);
     strcpy(newBook_toAdd.author, removeSpecial_chars(newBook_toAdd.author));
     strupr(newBook_toAdd.author);
     
-    printf("\nType the New Book's Genres: ");
+    printf("\nType the New Book Genres: ");
     fgets(newBook_toAdd.genres, sizeof(newBook_toAdd.genres), stdin);
     strcpy(newBook_toAdd.genres, removeSpecial_chars(newBook_toAdd.genres));
     strupr(newBook_toAdd.genres);
 
-    printf("\nType the New Book's Lauch Date(dd/mm/yyy): ");
+    printf("\nType the New Book Release Date(dd/mm/yyy): ");
     fgets(newBook_toAdd.date, sizeof(newBook_toAdd.date), stdin);
     strcpy(newBook_toAdd.date, removeSpecial_chars(newBook_toAdd.date));
     strupr(newBook_toAdd.date);
 
-    printf("\nType the New Book's Rent Price per Day: R$");
+    printf("\nType the New Book Rent Price per Day: R$");
     fgets(inputStr, 1024, stdin);
     if((newBook_toAdd.rentValue_perDay = atof(inputStr)) <= 0)
     {
@@ -252,7 +294,7 @@ void removeBooks(void)
 
     fclose(pBooks);
 
-    printf("\n\nType the Book's Number to Delete: ");    
+    printf("\n\nType the Book Number to Delete: ");    
     fgets(numInput, 1024, stdin);
     if((bookNum_toDelete = atoi(numInput)) == 0 || bookNum_toDelete > lineCounter)
     {        
@@ -346,9 +388,9 @@ void changePwd(void)
     printf("\n\t\t\t\t\tCHANGING PASSWORD");
     printf("\n\t\t\t------------------------------------------------");
 
-    printf("\n\nType your New PassWord - MAX %d Characters: ", MAX_PWDSIZE - 1); 
+    printf("\n\nType the New PassWord - MAX %d Characters: ", MAX_PWDSIZE - 1); 
     fgets(newPwd1, 1024, stdin);
-    printf("\nType your New PassWord again: ");
+    printf("\nType the New PassWord again: ");
     fgets(newPwd2, 1024, stdin);
 
     if //if they are diferent or bigger
