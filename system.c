@@ -91,6 +91,7 @@ int main()
                 break;
 
             case ShowAccounts:
+                showAccounts();
                 break;
 
             case newBooks:
@@ -206,7 +207,38 @@ void removeAccounts(void)
 
 void showAccounts(void)
 {
+    account inFile;
+    int lineCounter = 0;
 
+    if(login() == 0) return;
+
+    system("cls");
+    printf("\n\t\t\t\t\t      ACCOUNTS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFile(pAccounts, ACCOUNTS_FPATH) != 1)
+    {
+        printf("\n\nIt seems it does not have an Account yet :/");
+        return;
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+
+    while
+    (
+        fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
+        &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
+    )
+    {
+        lineCounter++;
+
+        printf("\n\n\t\t%d) Name: %s - Ic: %s - Rents: %d - Money to Pay: R$%.2f", 
+        lineCounter, inFile.name, inFile.ic, inFile.amountOf_rents, inFile.moneyTo_play);
+    }
+
+    fclose(pAccounts);
+
+    printf("\n\nType anything to Continue.");
 }
 
 void addBooks(void)
