@@ -91,6 +91,7 @@ int main()
                 break;
 
             case RemoveRent:
+                removeRent();
                 break;
 
             case ShowRent:
@@ -191,7 +192,7 @@ void addRent(void)
         checkFile(pBooks, BOOKS_FPATH) != 1 
     )
     {
-        printf("\n\nSorry, it needs at least 1 Account and 1 Book in System to Rent :/");
+        printf("\n\nSorry, it needs at least 1 Account and 1 Book in System to Rent a Book :/");
         return;
     }
 
@@ -361,7 +362,119 @@ void addRent(void)
 
 void removeRent(void)
 {
+    FILE *pTemp;
+    const char TEMPF_PATH[] = "temp.tmp";
 
+    rent inFile;
+    account accountIn_file;
+
+    int lineCounter = 0, rentNum_toDelete = 0;
+    char numInput[1024] = {'\0'}, accountIc_toUpdte[10] = {'\0'};
+    float accountMoney_toUpdte = 0; 
+
+    if(login() == 0) return;
+
+    system("cls");
+    printf("\n\t\t\t\t\t   REMOVE A RENT");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFile(pRents, RENTS_FPATH) != 1)
+    {
+        printf("\nSorry, it seems it does not have a Rent yet :/");
+        return;
+    }
+
+    pRents = fopen(RENTS_FPATH, "r");
+    while //scans and prints the file rent info
+    (
+        fscanf(pRents, "%s %s %s %d %f", &inFile.name, &inFile.ic, &inFile.title, 
+        &inFile.amountOf_daysRented, &inFile.totalTo_pay) != EOF
+    )
+    {
+        lineCounter++;
+        printf("\n\n\t\t%d) Name: %s - IC: %s - Title: %s", lineCounter, inFile.name, 
+        inFile.ic, inFile.title);
+    }
+    fclose(pRents);
+
+    printf("\n\nType the Rent Number to Delete it: ");
+    fgets(numInput, 1024, stdin);
+    if((rentNum_toDelete = atoi(numInput)) == 0 || rentNum_toDelete > lineCounter)
+    {
+        printf("\nInvalid Input!");
+        return;
+    }
+
+    if(checkFile(pRents, RENTS_FPATH) != 1)
+    {
+        printf("\nError, it is not possible to continue.");
+        return;
+    }
+
+    //creates a temp file
+    pRents = fopen(RENTS_FPATH, "r");
+    pTemp = fopen(TEMPF_PATH, "w");
+    lineCounter = 0; 
+
+    while
+    (
+        fscanf(pRents, "%s %s %s %d %f", &inFile.name, &inFile.ic, &inFile.title, 
+        &inFile.amountOf_daysRented, &inFile.totalTo_pay) != EOF
+    )
+    {
+        lineCounter++; 
+        
+        //print in the temp file, except for the rent that the user wants to delete
+        if(lineCounter != rentNum_toDelete)       
+        {   
+            fprintf(pTemp, "%s %s %s %d %.2f\n", inFile.name, inFile.ic, inFile.title, 
+            inFile.amountOf_daysRented, inFile.totalTo_pay);
+        }
+        else //saves the accounts info to update it later
+        {
+            strcpy(accountIc_toUpdte, inFile.ic);
+            accountMoney_toUpdte = inFile.totalTo_pay;
+        }
+    }    
+
+    fclose(pRents);
+    fclose(pTemp);
+
+    //deletes the old and renames the new one without that rent
+    remove(RENTS_FPATH);
+    rename(TEMPF_PATH, RENTS_FPATH);
+
+    //update account info
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    pTemp = fopen(TEMPF_PATH, "w");
+
+    while //reads and prints the account infos
+    (
+        fscanf(pAccounts, "%s %s %d %f", &accountIn_file.name, &accountIn_file.ic, 
+        &accountIn_file.amountOf_rents, &accountIn_file.moneyTo_pay) != EOF
+    )
+    {
+        //updates the account info, removing the old data
+        if(strcmp(accountIc_toUpdte, accountIn_file.ic) == 0)
+        {
+            fprintf(pTemp, "%s %s %d %.2f\n", accountIn_file.name, accountIn_file.ic, 
+            accountIn_file.amountOf_rents - 1, 
+            accountIn_file.moneyTo_pay - accountMoney_toUpdte);
+        }
+        else
+        {
+            fprintf(pTemp, "%s %s %d %.2f\n", accountIn_file.name, accountIn_file.ic, 
+            accountIn_file.amountOf_rents, accountIn_file.moneyTo_pay);
+        }
+    }
+
+    fclose(pAccounts);
+    fclose(pTemp);
+
+    remove(ACCOUNTS_FPATH);
+    rename(TEMPF_PATH, ACCOUNTS_FPATH);
+
+    printf("\nRent Successfully Removed!");
 }
 
 void showRent(void)
@@ -499,6 +612,18 @@ void removeAccounts(void)
         {
             fprintf(pTemp, "%s %s %d %.2f\n", inFile.name, inFile.ic, 
             inFile.amountOf_rents, inFile.moneyTo_pay);
+        }
+        //to avoid errors, it needs to delete all the Accounts rents before delete the Account
+        else if(inFile.amountOf_rents != 0)
+        {
+            printf("\nSorry, it is not Possible to remove this Account.");
+            printf("\nRemove all the Accounts Rents before delete it.");
+            
+            fclose(pAccounts);
+            fclose(pTemp);
+
+            remove(TEMPF_PATH);
+            return;
         }
     }
 
