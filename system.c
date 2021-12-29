@@ -88,6 +88,7 @@ int main()
                 break;
 
             case RemoveAccounts:
+                removeAccounts();
                 break;
 
             case ShowAccounts:
@@ -200,9 +201,86 @@ void addAccounts(void)
 
     printf("\nNew Account Successfully Added");
 }
+
 void removeAccounts(void)
 {
+    FILE *pTemp;
+    const char TEMPF_PATH[] = "temp.tmp";
 
+    account inFile;
+    char numInput[1024] = {'\0'};
+    int lineCounter = 0, accountNum_toDelete = 0;
+
+    if(login() == 0) return;
+
+    system("cls");
+    printf("\n\t\t\t\t\tREMOVE AN ACCOUNT");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFile(pAccounts, ACCOUNTS_FPATH) != 1)
+    {
+        printf("\n\nIt seems it does not have an Account yet :/");
+        return;
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+
+    while //reads and prints the account infos
+    (
+        fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
+        &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
+    )
+    {
+        lineCounter++; //shows accounts num
+        printf("\n\n\t\t\t\t%d) Name: %s - Ic: %s", lineCounter, inFile.name, inFile.ic);
+    }
+
+    fclose(pAccounts);
+
+    //gets the input as a string and converts to an integer
+    printf("\n\nType the Account Number to Delete it: ");
+    fgets(numInput, 1024, stdin);
+    if((accountNum_toDelete = atoi(numInput)) == 0 || accountNum_toDelete > lineCounter)
+    {
+        printf("\nInvalid Input!");
+        return;
+    }
+    
+    if(checkFile(pAccounts, ACCOUNTS_FPATH) != 1)
+    {
+        printf("\nError, it is not possible to continue.");
+        return;
+    }
+
+    //creates a temp file to transfer the data
+    pTemp = fopen(TEMPF_PATH, "w");
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    lineCounter = 0; //resets line counter
+
+    while //reads and prints the account infos
+    (
+        fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
+        &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
+    )
+    {
+        lineCounter++;
+
+        //copy and paste all accounts, except for the account that the user wants to delete
+        if(lineCounter != accountNum_toDelete)
+        {
+            fprintf(pTemp, "%s %s %d %.2f\n", inFile.name, inFile.ic, 
+            inFile.amountOf_rents, inFile.moneyTo_play);
+        }
+    }
+
+    fclose(pAccounts);
+    fclose(pTemp); 
+
+    //remove the old file and renames the new one without that account
+    remove(ACCOUNTS_FPATH);
+    rename(TEMPF_PATH, ACCOUNTS_FPATH);
+
+    printf("\nAccount Successfully Deleted!");
 }
 
 void showAccounts(void)
@@ -224,7 +302,7 @@ void showAccounts(void)
 
     pAccounts = fopen(ACCOUNTS_FPATH, "r");
 
-    while
+    while //reads and prints the account infos
     (
         fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
         &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
@@ -326,7 +404,7 @@ void removeBooks(void)
 
     fclose(pBooks);
 
-    printf("\n\nType the Book Number to Delete: ");    
+    printf("\n\nType the Book Number to Delete it: ");    
     fgets(numInput, 1024, stdin);
     if((bookNum_toDelete = atoi(numInput)) == 0 || bookNum_toDelete > lineCounter)
     {        
