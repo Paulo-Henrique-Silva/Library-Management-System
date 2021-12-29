@@ -44,6 +44,18 @@ FILE
 *pAccounts,
 *pBooks; 
 
+typedef struct rentsInfo
+{
+    char
+    name[40],
+    ic[10],
+    title[40];
+
+    int amountOf_daysRented; 
+
+    float totalTo_pay;
+} rent;
+
 typedef struct accountsInfo
 {
     char
@@ -52,7 +64,7 @@ typedef struct accountsInfo
 
     int amountOf_rents;
 
-    float moneyTo_play;
+    float moneyTo_pay;
 } account;
 
 typedef struct booksInfo
@@ -75,6 +87,7 @@ int main()
         switch(operation = menu())
         {
             case newRent:
+                addRent();
                 break;
 
             case RemoveRent:
@@ -154,7 +167,195 @@ int menu(void)
 
 void addRent(void)
 {
+    FILE *pTemp;
+    const char TEMPF_PATH[] = "temp.tmp";
 
+    rent newRent;
+    account accountList;
+    book bookList;
+
+    int lineCounter = 0, accountNum_toRent = 0, bookNum_toRent = 0;
+    char numInput[1024] = {'\0'};
+
+    if(login() == 0) return;
+
+    //Choosing the Account
+    system("cls");
+    printf("\n\t\t\t\t\t  CHOOSE AN ACCOUNT");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if //checks the amount of Accounts and Books
+    (
+        checkFile(pAccounts, ACCOUNTS_FPATH) != 1 || 
+        checkFile(pBooks, BOOKS_FPATH) != 1 
+    )
+    {
+        printf("\n\nSorry, it needs at least 1 Account and 1 Book in System to Rent :/");
+        return;
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    while //reads and prints the account infos
+    (
+        fscanf(pAccounts, "%s %s %d %f", &accountList.name, &accountList.ic, 
+        &accountList.amountOf_rents, &accountList.moneyTo_pay) != EOF
+    )
+    {
+        lineCounter++; //shows accounts num
+        printf("\n\n\t\t\t\t%d) Name: %s - Ic: %s", lineCounter, accountList.name, 
+        accountList.ic);
+    }
+    fclose(pAccounts);
+
+    //gets as a str and converts to an integer
+    printf("\n\nType Person Account Number that wants to Rent a Book: "); 
+    fgets(numInput, 1024, stdin);
+    if((accountNum_toRent = atoi(numInput)) == 0 || accountNum_toRent > lineCounter)
+    {
+        printf("\nInvalid Input!");
+        return;
+    }
+
+    //Choosing the Book
+    system("cls");
+    printf("\n\t\t\t\t\t  CHOOSE A BOOK");
+    printf("\n\t\t\t------------------------------------------------");
+
+    if(checkFile(pBooks, BOOKS_FPATH) != 1)
+    {
+        printf("\nError, it is not Possible to continue.");
+        return;
+    }
+
+    pBooks = fopen(BOOKS_FPATH, "r");
+    lineCounter = 0;
+    while //reads books and prints it
+    (
+        fscanf(pBooks, "%s %s %s %s %f", &bookList.title, &bookList.author, 
+        &bookList.genres, &bookList.date, &bookList.rentValue_perDay) != EOF
+    )
+    {
+        lineCounter++; //shows books num        
+        printf("\n\n\t\t\t%d) Title: %s - Author: %s - Price: R$%.2f", 
+        lineCounter, bookList.title, bookList.author, bookList.rentValue_perDay);    
+    }    
+    fclose(pBooks);
+
+    printf("\n\nType the Book Number to be Rented: "); 
+    fgets(numInput, 1024, stdin);
+    if((bookNum_toRent = atoi(numInput)) == 0 || bookNum_toRent > lineCounter)
+    {
+        printf("\nInvalid Input!");
+        return;
+    }
+
+    //amount of days
+    system("cls");
+    printf("\n\t\t\t\t\t  AMOUNT OF DAYS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    printf("\n\nType the Amount of Days to rent: ");
+    fgets(numInput, 1024, stdin);
+    if((newRent.amountOf_daysRented = atoi(numInput)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return;
+    }
+
+    //gets new rent info
+    if //checks the amount of Accounts and Books
+    (
+        checkFile(pAccounts, ACCOUNTS_FPATH) != 1 || 
+        checkFile(pBooks, BOOKS_FPATH) != 1 
+    )
+    {
+        printf("\n\nError, it is not possible to Continue.");
+        return;
+    }
+
+    //gets the name and the ic
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    lineCounter = 0; //reset line counter
+    while //scans the files and copy the info to new rent
+    (
+        fscanf(pAccounts, "%s %s %d %f", &accountList.name, &accountList.ic, 
+        &accountList.amountOf_rents, &accountList.moneyTo_pay) != EOF
+    )
+    {
+        lineCounter++; 
+
+        if(lineCounter == accountNum_toRent)
+        {
+            strcpy(newRent.name, accountList.name);
+            strcpy(newRent.ic, accountList.ic);
+        }
+    }
+    fclose(pAccounts);
+
+    //gets the book title and the rent to calculate
+    pBooks = fopen(BOOKS_FPATH, "r");
+    lineCounter = 0;
+    while ///scans books list to new rent info
+    (
+        fscanf(pBooks, "%s %s %s %s %f", &bookList.title, &bookList.author, 
+        &bookList.genres, &bookList.date, &bookList.rentValue_perDay) != EOF
+    )
+    {
+        lineCounter++;      
+
+        if(lineCounter == bookNum_toRent)
+        {
+            strcpy(newRent.title, bookList.title);
+            newRent.totalTo_pay = bookList.rentValue_perDay * newRent.amountOf_daysRented;
+        }  
+    }    
+    fclose(pBooks);
+
+    //adding to file
+    //how it is adding, there is no need to block the program
+    checkFile(pRents, RENTS_FPATH); 
+
+    pRents = fopen(RENTS_FPATH, "a");
+    fprintf(pRents, "%s %s %s %d %.2f\n", newRent.name, newRent.ic, newRent.title, 
+    newRent.amountOf_daysRented, newRent.totalTo_pay);
+    fclose(pRents);
+
+    //update account infos
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    pTemp = fopen(TEMPF_PATH, "w"); //creates a temp file to update
+    lineCounter = 0; 
+
+    while 
+    (
+        fscanf(pAccounts, "%s %s %d %f", &accountList.name, &accountList.ic, 
+        &accountList.amountOf_rents, &accountList.moneyTo_pay) != EOF
+    )
+    {
+        lineCounter++; 
+
+        //add one rent to the account total and add the new amount to pay
+        //for other accounts, just copy and paste
+        if(lineCounter == accountNum_toRent)
+        {
+            fprintf(pTemp, "%s %s %d %.2f\n", accountList.name, accountList.ic, 
+            accountList.amountOf_rents + 1, accountList.moneyTo_pay + newRent.totalTo_pay);
+        }
+        else
+        {
+            fprintf(pTemp, "%s %s %d %.2f\n", accountList.name, accountList.ic, 
+            accountList.amountOf_rents, accountList.moneyTo_pay);
+        }
+    }
+
+    fclose(pAccounts);
+    fclose(pTemp);
+
+    //remove the old file and renames the new one with the updates infos
+    remove(ACCOUNTS_FPATH);
+    rename(TEMPF_PATH, ACCOUNTS_FPATH);
+
+    printf("\nThe total will be: R$%.2f", newRent.totalTo_pay);
+    printf("\nNew Rent Sucessfully Added!");
 }
 
 void removeRent(void)
@@ -189,14 +390,14 @@ void addAccounts(void)
 
     //assign zero because it's a new account
     newAccount.amountOf_rents = 0; 
-    newAccount.moneyTo_play = 0;
+    newAccount.moneyTo_pay = 0;
 
     //how it is adding, there is no need to block the program
     checkFile(pAccounts, ACCOUNTS_FPATH); 
 
     pAccounts = fopen(ACCOUNTS_FPATH, "a");
     fprintf(pAccounts, "%s %s %d %.2f\n", newAccount.name, newAccount.ic, 
-    newAccount.amountOf_rents, newAccount.moneyTo_play);
+    newAccount.amountOf_rents, newAccount.moneyTo_pay);
     fclose(pAccounts);
 
     printf("\nNew Account Successfully Added");
@@ -224,17 +425,15 @@ void removeAccounts(void)
     }
 
     pAccounts = fopen(ACCOUNTS_FPATH, "r");
-
     while //reads and prints the account infos
     (
         fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
-        &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
+        &inFile.amountOf_rents, &inFile.moneyTo_pay) != EOF
     )
     {
         lineCounter++; //shows accounts num
         printf("\n\n\t\t\t\t%d) Name: %s - Ic: %s", lineCounter, inFile.name, inFile.ic);
     }
-
     fclose(pAccounts);
 
     //gets the input as a string and converts to an integer
@@ -260,7 +459,7 @@ void removeAccounts(void)
     while //reads and prints the account infos
     (
         fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
-        &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
+        &inFile.amountOf_rents, &inFile.moneyTo_pay) != EOF
     )
     {
         lineCounter++;
@@ -269,7 +468,7 @@ void removeAccounts(void)
         if(lineCounter != accountNum_toDelete)
         {
             fprintf(pTemp, "%s %s %d %.2f\n", inFile.name, inFile.ic, 
-            inFile.amountOf_rents, inFile.moneyTo_play);
+            inFile.amountOf_rents, inFile.moneyTo_pay);
         }
     }
 
@@ -291,7 +490,7 @@ void showAccounts(void)
     if(login() == 0) return;
 
     system("cls");
-    printf("\n\t\t\t\t\t      ACCOUNTS");
+    printf("\n\t\t\t\t\t    ACCOUNTS");
     printf("\n\t\t\t------------------------------------------------");
 
     if(checkFile(pAccounts, ACCOUNTS_FPATH) != 1)
@@ -301,19 +500,17 @@ void showAccounts(void)
     }
 
     pAccounts = fopen(ACCOUNTS_FPATH, "r");
-
     while //reads and prints the account infos
     (
         fscanf(pAccounts, "%s %s %d %f", &inFile.name, &inFile.ic, 
-        &inFile.amountOf_rents, &inFile.moneyTo_play) != EOF
+        &inFile.amountOf_rents, &inFile.moneyTo_pay) != EOF
     )
     {
         lineCounter++;
 
         printf("\n\n\t\t%d) Name: %s - Ic: %s - Rents: %d - Money to Pay: R$%.2f", 
-        lineCounter, inFile.name, inFile.ic, inFile.amountOf_rents, inFile.moneyTo_play);
+        lineCounter, inFile.name, inFile.ic, inFile.amountOf_rents, inFile.moneyTo_pay);
     }
-
     fclose(pAccounts);
 
     printf("\n\nType anything to Continue.");
@@ -391,7 +588,6 @@ void removeBooks(void)
     }
 
     pBooks = fopen(BOOKS_FPATH, "r");
-
     while
     (
         fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
@@ -401,7 +597,6 @@ void removeBooks(void)
         lineCounter++; //shows the books num        
         printf("\n\n\t\t\t%d) Title: %s - Author: %s", lineCounter, inFile.title, inFile.author);    
     }    
-
     fclose(pBooks);
 
     printf("\n\nType the Book Number to Delete it: ");    
@@ -467,7 +662,6 @@ void showBooks(void)
     }
 
     pBooks = fopen(BOOKS_FPATH, "r");
-
     while //scans and prints the nums
     (
         fscanf(pBooks, "%s %s %s %s %f", &inFile.title, &inFile.author, 
@@ -479,7 +673,6 @@ void showBooks(void)
         lineCounter, inFile.title, inFile.author, inFile.genres, inFile.date, 
         inFile.rentValue_perDay);
     }
-
     fclose(pBooks);
 
     printf("\n\nPress Anything to Continue.");
