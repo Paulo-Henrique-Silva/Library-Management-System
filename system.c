@@ -28,6 +28,7 @@ void changePwd(void);
 
 int checkFile(FILE *pFile, char fPath[]);
 int login(void);
+int isA_validIc(char ic[]); 
 char *removeSpecial_chars(char string[]);
 
 enum menuOperations
@@ -524,12 +525,16 @@ void addAccounts(void)
     printf("\n\nType the New Account Name: ");
     fgets(newAccount.name, sizeof(newAccount.name), stdin);
     strcpy(newAccount.name, removeSpecial_chars(newAccount.name));
-    strupr(newAccount.name);
 
     printf("\nType the New Account Indentification code: ");
     fgets(newAccount.ic, sizeof(newAccount.ic), stdin);
     strcpy(newAccount.ic, removeSpecial_chars(newAccount.ic));
-    strupr(newAccount.ic);
+
+    if(isA_validIc(newAccount.ic) != 1)
+    {
+        printf("\nThis IC was already taken! Type Again.");
+        return;
+    }
 
     //assign zero because it's a new account
     newAccount.amountOf_rents = 0; 
@@ -947,6 +952,39 @@ int login(void)
 
     fclose(pAdmin);
     return 1; //if the passwords are not equal
+}
+
+/*
+Checks if there is other account with this ic.
+if there is, returns 0.
+Else, returns 1
+*/
+int isA_validIc(char ic[])
+{
+    account existingAccount;
+
+    if(checkFile(pAccounts, ACCOUNTS_FPATH) == 1)
+    {
+        pAccounts = fopen(ACCOUNTS_FPATH, "r");
+
+        while 
+        (
+            fscanf(pAccounts, "%s %s %d %f", &existingAccount.name, &existingAccount.ic, 
+            &existingAccount.amountOf_rents, &existingAccount.moneyTo_pay) != EOF
+        )
+        {
+            if(strcmp(ic, existingAccount.ic) == 0)
+            {
+                fclose(pAccounts);
+                return 0;
+            }   
+        }
+
+        fclose(pAccounts);
+        return 1;
+    }
+
+    return 0;
 }
 
 /*
