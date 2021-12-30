@@ -11,7 +11,11 @@
 #define RENTS_FPATH "rents.txt"
 #define ACCOUNTS_FPATH "account.txt"
 #define BOOKS_FPATH "books.txt"
+
 #define MAX_PWDSIZE sizeof(DEFAULT_PWD)
+#define MAX_RENTSNUM 30
+#define MAX_ACCOUNTSNUM 10
+#define MAX_BOOKSNUM 20
 
 int menu();
 
@@ -29,6 +33,8 @@ void changePwd(void);
 int checkFile(FILE *pFile, char fPath[]);
 int login(void);
 int isA_validIc(char ic[]); 
+int amountOf_inFile(FILE *pFile, char fPath[]);
+
 char *removeSpecial_chars(char string[]);
 
 enum menuOperations
@@ -194,6 +200,12 @@ void addRent(void)
     )
     {
         printf("\n\nSorry, it needs at least 1 Account and 1 Book in System to Rent a Book :/");
+        return;
+    }
+
+    if(amountOf_inFile(pRents, RENTS_FPATH) == MAX_RENTSNUM)
+    {
+        printf("\n\nSorry, the Max Number of Rents Reached! (%d)", MAX_RENTSNUM);
         return;
     }
 
@@ -522,6 +534,12 @@ void addAccounts(void)
     printf("\n\t\t\t\t\t  ADDING ACCOUNTS");
     printf("\n\t\t\t------------------------------------------------");
 
+    if(amountOf_inFile(pAccounts, ACCOUNTS_FPATH) == MAX_ACCOUNTSNUM)
+    {
+        printf("\n\nSorry, the Max number of Accounts Reached! (%d)", MAX_ACCOUNTSNUM);
+        return;
+    }
+
     printf("\n\nType the New Account Name: ");
     fgets(newAccount.name, sizeof(newAccount.name), stdin);
     strcpy(newAccount.name, removeSpecial_chars(newAccount.name));
@@ -686,6 +704,12 @@ void addBooks(void)
     system("cls");
     printf("\n\t\t\t\t\t  ADDING BOOKS");
     printf("\n\t\t\t------------------------------------------------");
+
+    if(amountOf_inFile(pBooks, BOOKS_FPATH) == MAX_BOOKSNUM)
+    {
+        printf("\n\nSorry, the Max Number of Books Reached! (%d)", MAX_BOOKSNUM);
+        return;
+    }
 
     printf("\n\nType the New Book Title: ");
     fgets(newBook_toAdd.title, sizeof(newBook_toAdd.title), stdin);
@@ -985,6 +1009,27 @@ int isA_validIc(char ic[])
     }
 
     return 0;
+}
+
+/*
+Calculates the amount of lines in a file
+*/
+int amountOf_inFile(FILE *pFile, char fPath[])
+{
+    int amountOf_lines = 0;
+    char line[1024] = {'\0'};
+
+    if(checkFile(pFile, fPath) == 1)
+    {
+        pFile = fopen(fPath, "r");
+
+        while(fgets(line, 1024, pFile) != NULL)
+            amountOf_lines++;
+
+        fclose(pFile);
+    }
+
+    return amountOf_lines;
 }
 
 /*
