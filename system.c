@@ -11,6 +11,7 @@
 #define RENTS_FPATH "rents.txt"
 #define ACCOUNTS_FPATH "account.txt"
 #define BOOKS_FPATH "books.txt"
+#define TEMPF_PATH "temp.tmp"
 
 #define MAX_PWDSIZE sizeof(DEFAULT_PWD)
 #define MAX_RENTSNUM 30
@@ -29,6 +30,7 @@ void addBooks(void);
 void removeBooks(void);
 void showBooks(void);
 void changePwd(void);
+void instructions(void);
 
 int checkFile(FILE *pFile, char fPath[]);
 int login(void);
@@ -42,14 +44,15 @@ enum menuOperations
     newRent = 1, RemoveRent, ShowRent,
     newAccounts, RemoveAccounts, ShowAccounts,
     newBooks, RemoveBooks, ShowBooks,
-    ChangePassword, ExitProgram
+    ChangePassword, Instruc, ExitProgram
 };
 
 FILE 
 *pAdmin, 
 *pRents,
 *pAccounts,
-*pBooks; 
+*pBooks,
+*pTemp;
 
 typedef struct rentsInfo
 {
@@ -132,7 +135,11 @@ int main()
             case ChangePassword:
                 changePwd();
                 break;
-
+            
+            case Instruc:
+                instructions();
+                break;
+        
             case ExitProgram:
                 printf("\nExiting...");
                 break;
@@ -166,7 +173,8 @@ int menu(void)
     printf("\n\t\t\t\t[8] - Remove an Existing Book");
     printf("\n\t\t\t\t[9] - Show Books Details");
     printf("\n\t\t\t\t[10] - Change Admin PassWord");
-    printf("\n\t\t\t\t[11] - Exit");
+    printf("\n\t\t\t\t[11] - Instructions");
+    printf("\n\t\t\t\t[12] - Exit");
 
     printf("\n\nType the Operation: ");
     fgets(input, 1024, stdin); //takes as a str and convets to an integer to avoid errors
@@ -176,9 +184,6 @@ int menu(void)
 
 void addRent(void)
 {
-    FILE *pTemp;
-    const char TEMPF_PATH[] = "temp.tmp";
-
     rent newRent;
     account accountList;
     book bookList;
@@ -375,9 +380,6 @@ void addRent(void)
 
 void removeRent(void)
 {
-    FILE *pTemp;
-    const char TEMPF_PATH[] = "temp.tmp";
-
     rent inFile;
     account accountIn_file;
 
@@ -393,7 +395,7 @@ void removeRent(void)
 
     if(checkFile(pRents, RENTS_FPATH) != 1)
     {
-        printf("\nSorry, it seems it does not have a Rent yet :/");
+        printf("\n\nSorry, it seems it does not have a Rent yet :/");
         return;
     }
 
@@ -503,7 +505,7 @@ void showRent(void)
 
     if(checkFile(pRents, RENTS_FPATH) != 1)
     {
-        printf("\nSorry, it seems it does not have a Rent yet :/");
+        printf("\n\nSorry, it seems it does not have a Rent yet :/");
         return;
     }
 
@@ -571,9 +573,6 @@ void addAccounts(void)
 
 void removeAccounts(void)
 {
-    FILE *pTemp;
-    const char TEMPF_PATH[] = "temp.tmp";
-
     account inFile;
     char numInput[1024] = {'\0'};
     int lineCounter = 0, accountNum_toDelete = 0;
@@ -752,9 +751,6 @@ void addBooks(void)
 
 void removeBooks(void)
 {
-    FILE *pTemp;
-    const char TEMPF_PATH[] = "temp.tmp";
-
     book inFile;
     char numInput[1024] = {'\0'};
     int lineCounter = 0, bookNum_toDelete = 0;
@@ -767,7 +763,7 @@ void removeBooks(void)
 
     if(checkFile(pBooks, BOOKS_FPATH) != 1) //checks if there is, at least, a book
     {
-        printf("\nIt seems it does not have a Book yet. :/");
+        printf("\n\nIt seems it does not have a Book yet. :/");
         return;
     }
 
@@ -864,9 +860,6 @@ void showBooks(void)
 
 void changePwd(void)
 {
-    FILE *pTemp;
-    const char TEMPF_PATH[] = "temp.tmp";
-
     char newPwd1[1024], newPwd2[1024];
 
     if(login() == 0) return;
@@ -901,6 +894,19 @@ void changePwd(void)
     rename(TEMPF_PATH, ADMIN_FPATH);
 
     printf("\nPassword Successfully Changed!");
+}
+
+void instructions(void)
+{
+    system("cls");
+    printf("\n\t\t\t\t\t  INSTRUCTIONS");
+    printf("\n\t\t\t------------------------------------------------");
+
+    printf("\n\n\t - To Rent a Book, you need to create an Account and add a Book to System.");
+    printf("\n\t  After That, select the Account, select the Book and Type how many days you would like to Rent it.");
+
+    printf("\n\n\t- You need an Admin password to Navigate throughout the Program.");
+    printf("\n\t  The Default Password is: 2021");
 }
 
 /*
@@ -987,7 +993,7 @@ int isA_validIc(char ic[])
 {
     account existingAccount;
 
-    if(checkFile(pAccounts, ACCOUNTS_FPATH) == 1)
+    if(checkFile(pAccounts, ACCOUNTS_FPATH) != -1)
     {
         pAccounts = fopen(ACCOUNTS_FPATH, "r");
 
